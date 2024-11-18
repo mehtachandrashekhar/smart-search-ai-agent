@@ -4,9 +4,9 @@ import os
 import toml
 import pandas as pd
 
-# Load secrets from secrets.toml file
-with open("secrets.toml", "r") as f:
-    secrets = toml.load(f)["secrets"]
+# # Load secrets from secrets.toml file
+# with open("secrets.toml", "r") as f:
+#     secrets = toml.load(f)["secrets"]
 
 # Set environment variables
 os.environ["SERPAPI_KEY"] = secrets["SERPAPI_KEY"]
