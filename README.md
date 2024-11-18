@@ -2,29 +2,55 @@
 
 ## Overview
 
-The Smart Search AI Agent is a Streamlit application designed to process data from CSV files or Google Sheets, perform web searches, and extract relevant information using language models. This project includes the use of various API keys for authentication and data processing.
+The **Smart Search AI Agent** is a powerful Streamlit application designed to streamline data processing. It allows users to upload CSV files or connect to Google Sheets, perform web searches for relevant information, and extract structured data using advanced language models. This tool is particularly useful for automating information retrieval and enhancing productivity.
+
+---
+
+## Features
+
+- **Data Integration**:
+  - Upload CSV files or link Google Sheets for processing.
+  - Preview and select specific columns for data processing.
+- **Dynamic Querying**:
+  - Create custom queries using placeholders like `{entity}`.
+  - Automatically insert data from the selected column into queries.
+- **Automated Web Search**:
+  - Perform searches using APIs like SerpAPI and gather structured results.
+- **LLM Integration**:
+  - Use OpenAI GPT or Groq LLM to extract precise information from search results.
+- **Results Display and Export**:
+  - View extracted data directly in the app and download it as a CSV file.
+
+---
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
+Before starting, ensure you have the following:
 
-- Python 3.10 or later
-- Git
+- **Python 3.10 or later**
+- **Git**
+- API Keys for:
+  - [Google Sheets](https://console.cloud.google.com/)
+  - [SerpAPI](https://serpapi.com/)
+  - [OpenAI](https://platform.openai.com/)
+  - [Groq AI](https://groq.com/)
+
+---
 
 ## Setup
 
 ### Step 1: Clone the Repository
 
-Clone the repository to your local machine:
+Clone the project to your local machine:
 
 ```sh
-git clone https://github.com/your-username/smart-search-ai-agent.git
+git clone https://github.com/mehtachandrashekhar/smart-search-ai-agent.git
 cd smart-search-ai-agent
 ```
 
 ### Step 2: Create a Virtual Environment
 
-Create a virtual environment to manage dependencies:
+Set up a virtual environment for managing dependencies:
 
 ```sh
 python -m venv venv
@@ -33,7 +59,7 @@ source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
 
 ### Step 3: Install Dependencies
 
-Install the required dependencies using pip:
+Install the required Python packages:
 
 ```sh
 pip install -r requirements.txt
@@ -41,7 +67,7 @@ pip install -r requirements.txt
 
 ### Step 4: Set Up Environment Variables
 
-Create a `.env` file in the root directory of your project to store your environment variables. Add the following variables to the `.env` file:
+Create a `.env` file in the project root to store sensitive API keys:
 
 ```plaintext
 SERPAPI_KEY=your_serpapi_key
@@ -56,85 +82,102 @@ GROQ_CONTEXT_MAX_TOKENS=4096
 
 ### Step 5: Create Configuration Files
 
-Create a `config` directory in the root of your project and add your `credentials.json` and `config.yaml` files to this directory.
+1. **`config/credentials.json`**: Configure your Google Sheets service account:
+   ```json
+   {
+     "type": "service_account",
+     "project_id": "your-project-id",
+     "private_key_id": "your-private-key-id",
+     "private_key": "-----BEGIN PRIVATE KEY-----\nyour-private-key\n-----END PRIVATE KEY-----\n",
+     "client_email": "your-client-email",
+     "client_id": "your-client-id",
+     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+     "token_uri": "https://oauth2.googleapis.com/token",
+     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+     "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/your-client-email"
+   }
+   ```
 
-#### Example: `credentials.json`
+2. **`config/config.yaml`**: Store API keys and settings:
+   ```yaml
+   api:
+     serpapi_key: your_serpapi_key
+     openai_api_key: your_openai_api_key
+     google_credentials_path: config/credentials.json
+     groq_api_key: your_groq_api_key
+     groq_api_url: https://api.groq.com/openai/v1/chat/completions
+     groq_model: llama3-8b-8192
+     groq_max_tokens: 100
+     groq_context_max_tokens: 4096
+   ```
 
-```json
-{
-  "type": "service_account",
-  "project_id": "your-project-id",
-  "private_key_id": "your-private-key-id",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nyour-private-key\n-----END PRIVATE KEY-----\n",
-  "client_email": "your-client-email",
-  "client_id": "your-client-id",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/your-client-email"
-}
-```
+### Step 6: Share Google Sheets with Service Account
 
-#### Example: `config.yaml`
-
-```yaml
-api:
-  serpapi_key: your_serpapi_key
-  openai_api_key: your_openai_api_key
-  google_credentials_path: config/credentials.json
-  groq_api_key: your_groq_api_key
-  groq_api_url: https://api.groq.com/openai/v1/chat/completions
-  groq_model: llama3-8b-8192
-  groq_max_tokens: 100
-  groq_context_max_tokens: 4096
-```
-
-### Step 6: Share Google Sheet with Service Account
-
-1. **Open Google Sheets**: Go to your Google Sheets document.
-2. **Share the Sheet**: Click on the "Share" button in the top-right corner.
-3. **Add Service Account Email**: In the "Share with people and groups" dialog, enter the service account email (found in your `credentials.json` file under `client_email`).
-4. **Set Permissions**: Set the permissions to "Editor" and click "Send".
+1. Open the Google Sheet you want to process.
+2. Click on the **"Share"** button.
+3. Add the **service account email** from `credentials.json`.
+4. Set permissions to **Editor** and save.
 
 ### Step 7: Update `.gitignore`
 
-Ensure that your `.gitignore` file includes the `.env` file and the `config` directory to prevent them from being pushed to GitHub:
+Ensure sensitive files are ignored by Git:
 
 ```plaintext
-# Ignore environment variables file
+# Environment variables
 .env
 
-# Ignore config directory
+# Configuration files
 config/
 ```
 
 ### Step 8: Run the Application
 
-Run the Streamlit application:
+Start the Streamlit app:
 
 ```sh
 streamlit run app/main.py
 ```
 
+---
+
 ## Usage
 
-1. **Upload a CSV File**: Use the sidebar to upload a CSV file.
-2. **Enter Google Sheets URL**: Alternatively, enter the URL of a Google Sheets document.
-3. **Select Column for Entities**: Choose the column containing the entities you want to process.
-4. **Enter Query**: Enter a query using the placeholder `{entity}` to specify where the entity should be inserted.
-5. **Process Data**: Click the "Process Data" button to perform the web search and extract information.
-6. **View Results**: The results will be displayed in the app, and you can download them as a CSV file.
+1. **Upload CSV/Connect Google Sheets**:
+   - Use the sidebar to upload a CSV file or enter a Google Sheets URL.
+2. **Select Column**:
+   - Choose the column containing entities for processing.
+3. **Enter Query**:
+   - Input a query with placeholders (e.g., `Find the email of {entity}`).
+4. **Process Data**:
+   - Click **"Process Data"** to search and extract results.
+5. **View and Export**:
+   - View the extracted results in the app and download them as a CSV file.
 
-## Contributing
+---
 
-Contributions are welcome! Please follow these steps to contribute:
+## Contribution
 
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix.
-3. Make your changes and commit them.
-4. Push your branch to your fork.
-5. Create a pull request.
+Contributions are always welcome! Here’s how you can contribute:
+
+1. **Fork the Repository**:
+   - Click the "Fork" button on GitHub.
+2. **Create a Branch**:
+   - Create a branch for your feature or bug fix:
+     ```sh
+     git checkout -b feature-name
+     ```
+3. **Make Changes**:
+   - Add your feature or fix the bug.
+4. **Push to GitHub**:
+   - Push your branch:
+     ```sh
+     git push origin feature-name
+     ```
+5. **Submit a Pull Request**:
+   - Open a pull request on the original repository.
+
+---
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
