@@ -1,22 +1,7 @@
 import streamlit as st
 import sys
 import os
-import toml
 import pandas as pd
-
-# # Load secrets from secrets.toml file
-# with open("secrets.toml", "r") as f:
-#     secrets = toml.load(f)["secrets"]
-
-# Set environment variables
-os.environ["SERPAPI_KEY"] = secrets["SERPAPI_KEY"]
-os.environ["OPENAI_API_KEY"] = secrets["OPENAI_API_KEY"]
-os.environ["GOOGLE_CREDENTIALS_PATH"] = secrets["GOOGLE_CREDENTIALS_PATH"]
-os.environ["GROQ_API_KEY"] = secrets["GROQ_API_KEY"]
-os.environ["GROQ_API_URL"] = secrets["GROQ_API_URL"]
-os.environ["GROQ_MODEL"] = secrets["GROQ_MODEL"]
-os.environ["GROQ_MAX_TOKENS"] = str(secrets["GROQ_MAX_TOKENS"])
-os.environ["GROQ_CONTEXT_MAX_TOKENS"] = str(secrets["GROQ_CONTEXT_MAX_TOKENS"])
 
 # Debugging: Print sys.path and working directory
 st.write(sys.path)
