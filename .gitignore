@@ -6,3 +6,6 @@ config/config.yaml
 
 #ignore the credentials
 config/credentials.json
+
+#secrets for streamlit deployment
+secrets.toml
