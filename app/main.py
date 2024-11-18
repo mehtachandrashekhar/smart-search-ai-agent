@@ -8,8 +8,8 @@ import pandas as pd
 load_dotenv()
 
 # Debugging: Print sys.path and working directory
-st.write(sys.path)
-st.write("Current Working Directory:", os.getcwd())
+# st.write(sys.path)
+# st.write("Current Working Directory:", os.getcwd())
 
 # Ensure the project root is added to sys.path for imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -48,7 +48,7 @@ elif input_type == "Google Sheets":
 if "data" in st.session_state:
     data = st.session_state.data
     selected_column = st.selectbox("Select Column for Entities", data.columns)
-    prompt = st.text_area("Enter Query (Use {placeholder} for entity)", "Find the details of {entity}")
+    prompt = st.text_area("Enter Query (Use {placeholder} for entity)", "Find the email of {entity}")
 
     if st.button("Process Data"):
         results = []
