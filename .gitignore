@@ -6,3 +6,6 @@ config/config.yaml
 
 #ignore the credentials
 config/credentials.json
+
+g_secrets.toml
+secrets.toml

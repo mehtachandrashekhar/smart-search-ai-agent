@@ -16,15 +16,9 @@ RUN pip install streamlit python-dotenv tiktoken
 # Make port 8501 available to the world outside this container
 EXPOSE 8501
 
-# Set environment variables
-ENV SERPAPI_KEY=${SERPAPI_KEY}
-ENV OPENAI_API_KEY=${OPENAI_API_KEY}
-ENV GOOGLE_CREDENTIALS_PATH=${GOOGLE_CREDENTIALS_PATH}
-ENV GROQ_API_KEY=${GROQ_API_KEY}
-ENV GROQ_API_URL=${GROQ_API_URL}
-ENV GROQ_MODEL=${GROQ_MODEL}
-ENV GROQ_MAX_TOKENS=${GROQ_MAX_TOKENS}
-ENV GROQ_CONTEXT_MAX_TOKENS=${GROQ_CONTEXT_MAX_TOKENS}
+# health check
+# CMD ["streamlit", "run", "app/main.py"]
+HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
 
 # Run the Streamlit app
-CMD ["streamlit", "run", "app/main.py"]
+ENTRYPOINT ["streamlit", "run", "app/main.py", "--server.port=8501", "--server.address=0.0.0.0"]
