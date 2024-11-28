@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import logging
+import json
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -24,8 +25,13 @@ def handle_google_sheets(sheet_url):
         sheet_id = sheet_url.split("/")[5]
 
         # Load credentials from environment variable
-        creds_path = os.getenv("GOOGLE_CREDENTIALS_PATH", "config/credentials.json")
-        creds = Credentials.from_service_account_file(creds_path)
+        creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
+        if not creds_json:
+            logger.error("GOOGLE_CREDENTIALS_JSON environment variable is not set.")
+            raise ValueError("GOOGLE_CREDENTIALS_JSON environment variable is not set.")
+
+        creds_info = json.loads(creds_json)
+        creds = Credentials.from_service_account_info(creds_info)
 
         service = build("sheets", "v4", credentials=creds)
         sheet = service.spreadsheets()
