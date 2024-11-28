@@ -2,6 +2,7 @@ import pandas as pd
 import os
 import logging
 import json
+import hvac
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -9,6 +10,10 @@ from googleapiclient.errors import HttpError
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Initialize Vault client
+client = hvac.Client(url=os.getenv('VAULT_ADDR', 'http://127.0.0.1:8200'))
+client.token = os.getenv('VAULT_TOKEN')
 
 def handle_csv_upload(uploaded_file):
     """Reads and returns a Pandas DataFrame from the uploaded CSV."""
@@ -24,11 +29,12 @@ def handle_google_sheets(sheet_url):
         # Extract the spreadsheet ID from the URL
         sheet_id = sheet_url.split("/")[5]
 
-        # Load credentials from environment variable
-        creds_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
+        # Load credentials from Vault
+        secret = client.secrets.kv.v2.read_secret_version(path='my-secrets/google_api')
+        creds_json = secret['data']['data']['GOOGLE_CREDENTIALS_JSON']
         if not creds_json:
-            logger.error("GOOGLE_CREDENTIALS_JSON environment variable is not set.")
-            raise ValueError("GOOGLE_CREDENTIALS_JSON environment variable is not set.")
+            logger.error("GOOGLE_CREDENTIALS_JSON secret is not set in Vault.")
+            raise ValueError("GOOGLE_CREDENTIALS_JSON secret is not set in Vault.")
 
         creds_info = json.loads(creds_json)
         creds = Credentials.from_service_account_info(creds_info)
