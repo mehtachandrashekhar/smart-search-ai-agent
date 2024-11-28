@@ -34,11 +34,10 @@ def extract_information(search_results, query):
 
     try:
         # Calculate the total token length of the messages and the completion
-        total_tokens = max_tokens
         encoding = tiktoken.get_encoding("cl100k_base")
         search_results_tokens = encoding.encode(search_results)
         query_tokens = encoding.encode(query)
-        total_tokens += len(search_results_tokens) + len(query_tokens)
+        total_tokens = len(search_results_tokens) + len(query_tokens) + max_tokens
 
         # Truncate the messages if necessary
         if total_tokens > context_max_tokens:
