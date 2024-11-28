@@ -3,9 +3,39 @@ import sys
 import os
 from dotenv import load_dotenv
 import pandas as pd
+import hvac
+import json
 
 # Load environment variables from .env file
 load_dotenv()
+
+# Initialize Vault client
+client = hvac.Client(url='http://127.0.0.1:8200')
+client.token = os.getenv('VAULT_TOKEN')  # Ensure you have the VAULT_TOKEN set in your environment
+
+# Fetch secrets from Vault
+api_keys_secret = client.secrets.kv.v2.read_secret_version(path='api_keys')
+settings_secret = client.secrets.kv.v2.read_secret_version(path='settings')
+secrets_secret = client.secrets.kv.v2.read_secret_version(path='secrets')
+environment_secret = client.secrets.kv.v2.read_secret_version(path='environment')
+connections_gsheets_secret = client.secrets.kv.v2.read_secret_version(path='connections/gsheets')
+
+# Set environment variables
+os.environ['GOOGLE_SHEETS_API_KEY'] = api_keys_secret['data']['data']['google_sheets']
+os.environ['WEB_SCRAPER_API_KEY'] = api_keys_secret['data']['data']['web_scraper']
+os.environ['LLM_API_KEY'] = api_keys_secret['data']['data']['llm_api']
+os.environ['RATE_LIMIT'] = settings_secret['data']['data']['rate_limit']
+os.environ['SERPAPI_KEY'] = secrets_secret['data']['data']['SERPAPI_KEY']
+os.environ['GROQ_API_KEY'] = secrets_secret['data']['data']['GROQ_API_KEY']
+os.environ['GROQ_API_URL'] = secrets_secret['data']['data']['GROQ_API_URL']
+os.environ['GROQ_MODEL'] = secrets_secret['data']['data']['GROQ_MODEL']
+os.environ['GROQ_MAX_TOKENS'] = secrets_secret['data']['data']['GROQ_MAX_TOKENS']
+os.environ['GROQ_CONTEXT_MAX_TOKENS'] = secrets_secret['data']['data']['GROQ_CONTEXT_MAX_TOKENS']
+os.environ['GOOGLE_CREDENTIALS_JSON'] = environment_secret['data']['data']['GOOGLE_CREDENTIALS_JSON']
+os.environ['GOOGLE_SHEETS_URL'] = connections_gsheets_secret['data']['data']['spreadsheet']
+
+# Parse the Google credentials JSON string
+google_credentials_json = json.loads(os.environ['GOOGLE_CREDENTIALS_JSON'])
 
 # Debugging: Print sys.path and working directory
 # st.write(sys.path)
@@ -36,7 +66,7 @@ if input_type == "CSV Upload":
         st.write(data)
         st.session_state.data = data  # Store data in session state
 elif input_type == "Google Sheets":
-    google_sheet_url = st.sidebar.text_input("Enter Google Sheets URL:", value="https://docs.google.com/spreadsheets/d/xxxxxxx/edit#gid=0")
+    google_sheet_url = st.sidebar.text_input("Enter Google Sheets URL:", value=os.getenv('GOOGLE_SHEETS_URL'))
     if google_sheet_url:
         # Handle Google Sheets input
         data = handle_google_sheets(google_sheet_url)
