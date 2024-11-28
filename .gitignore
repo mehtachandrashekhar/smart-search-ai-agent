@@ -10,4 +10,5 @@ config/credentials.json
 #secrets for streamlit deployment
 secrets.toml
 g_secrets.toml
-test.toml
+not_cred.toml
+cred.toml
