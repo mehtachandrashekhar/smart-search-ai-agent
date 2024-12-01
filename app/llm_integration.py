@@ -18,14 +18,15 @@ def extract_information(search_results, query):
         "Authorization": f"Bearer {api_key}"
     }
     
-    # Prepare the payload with correct JSON format
-    prompt = f"Extract relevant information from the following search results: {search_results}. Query: {query}"
+    # Sanitize the query by removing URLs or special characters
+    sanitized_query = query.replace("https://", "").replace("www.", "")
+
+    prompt = f"Extract relevant information from the following search results: {search_results}. Query: {sanitized_query}"
+
     payload = {
         "model": st.secrets["secrets"]["GROQ_MODEL"],
-        "messages": [{
-            "role": "user",
-            "content": prompt
-        }]
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": st.secrets["secrets"]["GROQ_MAX_TOKENS"]
     }
 
     try:
@@ -41,6 +42,7 @@ def extract_information(search_results, query):
 
     except requests.exceptions.RequestException as e:
         logger.error(f"API request failed: {e}")
+        logger.error(f"Error response from API: {response.text}")
         raise
     except Exception as e:
         logger.error(f"Error processing the API response: {e}")
