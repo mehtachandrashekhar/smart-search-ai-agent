@@ -4,8 +4,8 @@ import os
 import pandas as pd
 
 # Debugging: Print sys.path and working directory
-st.write(sys.path)
-st.write("Current Working Directory:", os.getcwd())
+# st.write(sys.path)
+# st.write("Current Working Directory:", os.getcwd())
 
 # Ensure the project root is added to sys.path for imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
