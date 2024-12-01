@@ -6,6 +6,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import streamlit as st
 import json
+import time
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -25,7 +26,7 @@ def handle_csv_upload(uploaded_file):
         logger.error(f"Error reading CSV file: {e}")
         raise
 
-def handle_google_sheets(sheet_url):
+def handle_google_sheets(sheet_url, range_name="'Sheet1'!A1:Z1000", delay=1):
     """Fetches data from Google Sheets using its API."""
     try:
         # Extract the spreadsheet ID from the URL
@@ -34,23 +35,24 @@ def handle_google_sheets(sheet_url):
         # Load credentials from environment variable
         creds = get_google_credentials()
 
+        # Rate limit compliance
+        time.sleep(delay)
+
         service = build("sheets", "v4", credentials=creds)
         sheet = service.spreadsheets()
-
-        # Define the range to fetch data from
-        range_name = "'Sheet1'!A1:Z1000"  # Adjust the range as needed
 
         result = sheet.values().get(spreadsheetId=sheet_id, range=range_name).execute()
         values = result.get("values", [])
 
         if not values:
-            logger.warning("No data found in the Google Sheet.")
+            logger.warning(f"No data found in the range {range_name} of the Google Sheet.")
             return pd.DataFrame()
 
+        logger.info(f"Fetched {len(values) - 1} rows and {len(values[0])} columns from the Google Sheet.")
         return pd.DataFrame(values[1:], columns=values[0])
     except HttpError as e:
-        logger.error(f"Google Sheets API error: {e}")
+        logger.error(f"Google Sheets API error for sheet {sheet_url}, range {range_name}: {e}")
         raise
     except Exception as e:
-        logger.error(f"Error fetching data from Google Sheets: {e}")
+        logger.error(f"Error fetching data from Google Sheets for sheet {sheet_url}, range {range_name}: {e}")
         raise
