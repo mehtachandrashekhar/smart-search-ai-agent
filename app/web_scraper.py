@@ -1,11 +1,13 @@
 import requests
 import logging
 import streamlit as st
+from app.utils import rate_limit
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+@rate_limit(max_calls=5, period_seconds=10)
 def perform_search(query):
     """
     Perform a web search using the SERPAPI.
