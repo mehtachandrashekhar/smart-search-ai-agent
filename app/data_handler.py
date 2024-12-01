@@ -1,19 +1,21 @@
 import pandas as pd
 import os
 import logging
-import json
-import hvac
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+import streamlit as st
+import json
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize Vault client
-client = hvac.Client(url=os.getenv('VAULT_ADDR', 'http://127.0.0.1:8200'))
-client.token = os.getenv('VAULT_TOKEN')
+def get_google_credentials():
+    credentials_json = st.secrets["environment"]["GOOGLE_CREDENTIALS_JSON"]
+    credentials_info = json.loads(credentials_json)
+    credentials = Credentials.from_service_account_info(credentials_info)
+    return credentials
 
 def handle_csv_upload(uploaded_file):
     """Reads and returns a Pandas DataFrame from the uploaded CSV."""
@@ -29,21 +31,14 @@ def handle_google_sheets(sheet_url):
         # Extract the spreadsheet ID from the URL
         sheet_id = sheet_url.split("/")[5]
 
-        # Load credentials from Vault
-        secret = client.secrets.kv.v2.read_secret_version(path='my-secrets/google_api')
-        creds_json = secret['data']['data']['GOOGLE_CREDENTIALS_JSON']
-        if not creds_json:
-            logger.error("GOOGLE_CREDENTIALS_JSON secret is not set in Vault.")
-            raise ValueError("GOOGLE_CREDENTIALS_JSON secret is not set in Vault.")
-
-        creds_info = json.loads(creds_json)
-        creds = Credentials.from_service_account_info(creds_info)
+        # Load credentials from environment variable
+        creds = get_google_credentials()
 
         service = build("sheets", "v4", credentials=creds)
         sheet = service.spreadsheets()
 
         # Define the range to fetch data from
-        range_name = "'Sheet1'!A1:D20"  # Adjust the range as needed
+        range_name = "'Sheet1'!A1:Z1000"  # Adjust the range as needed
 
         result = sheet.values().get(spreadsheetId=sheet_id, range=range_name).execute()
         values = result.get("values", [])

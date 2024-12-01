@@ -1,5 +1,6 @@
 import requests
 import logging
+import streamlit as st
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -7,16 +8,22 @@ logger = logging.getLogger(__name__)
 
 def perform_search(query):
     """
-    Perform a web search using the query.
+    Perform a web search using the SERPAPI.
     """
-    search_url = f"https://www.google.com/search?q={query}"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    api_key = st.secrets["api_keys"]["web_scraper"]
+    url = "https://serpapi.com/search"
+    params = {
+        "q": query,
+        "api_key": api_key
     }
+
     try:
-        response = requests.get(search_url, headers=headers)
-        response.raise_for_status()
-        return response.text
+        response = requests.get(url, params=params)
+        response.raise_for_status()  # Raise an error for bad status codes
+        return response.json()
     except requests.exceptions.RequestException as e:
-        logger.error(f"Web search failed: {e}")
+        logger.error(f"API request failed: {e}")
+        raise
+    except Exception as e:
+        logger.error(f"Error processing the API response: {e}")
         raise

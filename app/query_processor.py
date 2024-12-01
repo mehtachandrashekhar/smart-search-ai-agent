@@ -8,7 +8,8 @@ def process_query(prompt, entity):
     """
     Process the query by replacing the placeholder with the entity.
     """
-    if entity is None:
-        logger.error(f"Entity is None for prompt: {prompt}")
-        raise ValueError("Entity cannot be None")
-    return prompt.replace("{entity}", entity)
+    try:
+        return prompt.replace("{entity}", entity)
+    except Exception as e:
+        logger.error(f"Error processing query: {e}")
+        raise
