@@ -1,6 +1,7 @@
-import requests
+from groq import Groq
 import logging
 import streamlit as st
+from transformers import AutoTokenizer
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -10,47 +11,45 @@ def extract_information(search_results, query):
     """
     Send web search results to the LLM for specific data extraction.
     """
-    # Fetch required settings from Streamlit secrets
-    api_key = st.secrets["secrets"]["GROQ_API_KEY"]
-    url = st.secrets["secrets"]["GROQ_API_URL"]
-    model = st.secrets["secrets"]["GROQ_MODEL"]
-    max_tokens = st.secrets["secrets"]["GROQ_MAX_TOKENS"]
-
-    # Construct the payload for the API request
-    prompt = f"Extract relevant information from the following search results: {search_results}. Query: {query}"
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
-        "max_tokens": max_tokens
-    }
-
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
-    }
-
     try:
-        # Log the payload for debugging
-        logger.info(f"Payload: {payload}")
+        # Initialize the Groq client
+        client = Groq()
 
-        # Make the API request
-        logger.info("Sending request to LLM API...")
-        response = requests.post(url, headers=headers, json=payload)
-        response.raise_for_status()  # Raise HTTPError for bad status codes
+        # Load the tokenizer
+        tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct")
 
-        # Parse and return the result
-        result = response.json()
-        logger.info("LLM API response received successfully.")
-        return result.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+        # Construct the messages for the model
+        messages = [
+            {"role": "system", "content": "You are a pirate chatbot who always responds in pirate speak!"},
+            {"role": "user", "content": f"Extract relevant information from the following search results: {search_results}. Query: {query}"}
+        ]
 
-    except requests.exceptions.RequestException as e:
-        logger.error(f"LLM API request failed: {e}")
-        raise RuntimeError("Failed to connect to the LLM API. Please check your API key and URL.")
-    except KeyError as e:
-        logger.error(f"Unexpected response structure: {e}")
-        raise RuntimeError("Unexpected response from the LLM API. Please check the API configuration.")
+        # Truncate the messages if they are too long
+        max_input_tokens = 4096 - 1024  # Reserve 1024 tokens for the completion
+        total_tokens = sum(len(tokenizer.encode(msg["content"])) for msg in messages)
+
+        if total_tokens > max_input_tokens:
+            logger.warning(f"Truncating input messages to fit within the token limit. Original length: {total_tokens}, Max allowed: {max_input_tokens}")
+            messages = [{"role": msg["role"], "content": tokenizer.decode(tokenizer.encode(msg["content"])[:max_input_tokens])} for msg in messages]
+
+        # Generate text using the model
+        completion = client.chat.completions.create(
+            model="llama3-8b-8192",
+            messages=messages,
+            temperature=1,
+            max_tokens=1024,
+            top_p=1,
+            stream=True,
+            stop=None,
+        )
+
+        # Collect the generated text
+        generated_text = ""
+        for chunk in completion:
+            generated_text += chunk.choices[0].delta.content or ""
+
+        return generated_text.strip()
+
     except Exception as e:
-        logger.error(f"An unexpected error occurred: {e}")
+        logger.error(f"Error generating text: {e}")
         raise RuntimeError("An unexpected error occurred while processing the LLM response.")
