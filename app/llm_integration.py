@@ -10,41 +10,38 @@ def extract_information(search_results, query):
     """
     Send web search results to the LLM for specific data extraction.
     """
-    # Fetch required settings from Streamlit secrets
     api_key = st.secrets["secrets"]["GROQ_API_KEY"]
     url = st.secrets["secrets"]["GROQ_API_URL"]
-    model = st.secrets["secrets"]["GROQ_MODEL"]
-    max_tokens = st.secrets["secrets"]["GROQ_MAX_TOKENS"]
-
-    # Construct the payload for the API request
+    
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+    
+    # Prepare the payload with correct JSON format
     prompt = f"Extract relevant information from the following search results: {search_results}. Query: {query}"
     payload = {
-        "model": model,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ],
-        "max_tokens": max_tokens
+        "model": st.secrets["secrets"]["GROQ_MODEL"],
+        "messages": [{
+            "role": "user",
+            "content": prompt
+        }]
     }
 
-    headers = {"Authorization": f"Bearer {api_key}"}
-
     try:
-        # Make the API request
-        logger.info("Sending request to LLM API...")
+        # Make the POST request to the API
         response = requests.post(url, headers=headers, json=payload)
-        response.raise_for_status()  # Raise HTTPError for bad status codes
-
-        # Parse and return the result
-        result = response.json()
-        logger.info("LLM API response received successfully.")
-        return result.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+        
+        # Check for successful response
+        response.raise_for_status()  # Raise an error for bad status codes
+        
+        # Log the successful response
+        logger.info(f"API response: {response.json()}")
+        return response.json().get("choices", [{}])[0].get("message", {}).get("content", "").strip()
 
     except requests.exceptions.RequestException as e:
-        logger.error(f"LLM API request failed: {e}")
-        raise RuntimeError("Failed to connect to the LLM API. Please check your API key and URL.")
-    except KeyError as e:
-        logger.error(f"Unexpected response structure: {e}")
-        raise RuntimeError("Unexpected response from the LLM API. Please check the API configuration.")
+        logger.error(f"API request failed: {e}")
+        raise
     except Exception as e:
-        logger.error(f"An unexpected error occurred: {e}")
-        raise RuntimeError("An unexpected error occurred while processing the LLM response.")
+        logger.error(f"Error processing the API response: {e}")
+        raise
