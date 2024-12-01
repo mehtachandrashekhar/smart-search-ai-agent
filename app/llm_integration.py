@@ -1,7 +1,6 @@
 from groq import Groq
 import logging
 import streamlit as st
-from transformers import AutoTokenizer
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -15,9 +14,6 @@ def extract_information(search_results, query):
         # Initialize the Groq client
         client = Groq()
 
-        # Load the tokenizer
-        tokenizer = AutoTokenizer.from_pretrained("meta-llama/Meta-Llama-3-8B-Instruct")
-
         # Construct the messages for the model
         messages = [
             {"role": "system", "content": "You are a pirate chatbot who always responds in pirate speak!"},
@@ -26,11 +22,11 @@ def extract_information(search_results, query):
 
         # Truncate the messages if they are too long
         max_input_tokens = 4096 - 1024  # Reserve 1024 tokens for the completion
-        total_tokens = sum(len(tokenizer.encode(msg["content"])) for msg in messages)
+        total_chars = sum(len(msg["content"]) for msg in messages)
 
-        if total_tokens > max_input_tokens:
-            logger.warning(f"Truncating input messages to fit within the token limit. Original length: {total_tokens}, Max allowed: {max_input_tokens}")
-            messages = [{"role": msg["role"], "content": tokenizer.decode(tokenizer.encode(msg["content"])[:max_input_tokens])} for msg in messages]
+        if total_chars > max_input_tokens:
+            logger.warning(f"Truncating input messages to fit within the token limit. Original length: {total_chars}, Max allowed: {max_input_tokens}")
+            messages = [{"role": msg["role"], "content": msg["content"][:max_input_tokens]} for msg in messages]
 
         # Generate text using the model
         completion = client.chat.completions.create(
